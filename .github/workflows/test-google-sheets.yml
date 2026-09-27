@@ -1,0 +1,55 @@
+name: Test Google Sheets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Google library
+        run: pip install gspread google-auth
+
+      - name: Test Google Sheets
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          python - <<'PY'
+          import os
+          import json
+          import gspread
+          from google.oauth2.service_account import Credentials
+
+          credentials = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
+
+          scopes = [
+              "https://www.googleapis.com/auth/spreadsheets"
+          ]
+
+          creds = Credentials.from_service_account_info(
+              credentials,
+              scopes=scopes
+          )
+
+          client = gspread.authorize(creds)
+
+          sheet = client.open("Internship Tracker").worksheet("Internships")
+
+          sheet.append_row([
+              "TEST COMPANY",
+              "Test Internship",
+              "London",
+              "27/09/2026",
+              "",
+              "Test",
+              "TEST",
+              "https://example.com",
+              "Test",
+              "🆕 New",
+              "",
+              "DELETE THIS ROW"
+          ])
+
+          print("SUCCESS: Test row added to Google Sheet.")
+          PY
