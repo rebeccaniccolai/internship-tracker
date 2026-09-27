@@ -1,0 +1,71 @@
+{
+  "location": {
+    "countries": ["United Kingdom"],
+    "cities": ["London"]
+  },
+
+  "target_period": {
+    "start": "2027-05-01",
+    "end": "2027-08-31"
+  },
+
+  "role_type": {
+    "include": [
+      "internship",
+      "intern",
+      "placement",
+      "summer internship",
+      "summer placement",
+      "work placement",
+      "student placement"
+    ],
+    "exclude": [
+      "graduate scheme",
+      "graduate programme",
+      "graduate program",
+      "full-time",
+      "permanent",
+      "runner",
+      "production runner",
+      "camera runner",
+      "floor runner"
+    ]
+  },
+
+  "target_fields": [
+    "journalism",
+    "journalist",
+    "publishing",
+    "editorial",
+    "editor",
+    "film",
+    "cinema",
+    "television",
+    "tv",
+    "media",
+    "communications",
+    "public relations",
+    "PR",
+    "publicity",
+    "marketing",
+    "content",
+    "magazine",
+    "broadcasting",
+    "entertainment",
+    "arts",
+    "culture"
+  ],
+
+  "profile": {
+    "degree": [
+      "BA Film Studies",
+      "MSc Global Media and Communications"
+    ],
+    "experience": [
+      "film magazine columnist",
+      "tutoring"
+    ]
+  },
+
+  "minimum_relevance": "medium"
+}
