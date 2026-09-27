@@ -20,6 +20,6 @@ jobs:
         run: |
           pip install requests
 
-      - name: Run job search
-        run: |
-          python src/job_search.py
+      - name: Test Arbeitnow API
+  run: |
+    python -c "import requests; r=requests.get('https://www.arbeitnow.co.uk/api/job-board-api', headers={'User-Agent':'Mozilla/5.0'}, timeout=30); print('STATUS:', r.status_code); print(r.text[:1000])"
