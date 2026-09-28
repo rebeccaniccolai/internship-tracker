@@ -34,7 +34,7 @@ def add_jobs(jobs):
         worksheet.col_values(8)[1:]
     )
 
-    rows_added = 0
+    new_jobs = []
 
     for job in jobs:
         application_url = job["application_url"]
@@ -61,7 +61,8 @@ def add_jobs(jobs):
         ]
 
         worksheet.append_row(row)
-        existing_urls.add(application_url)
-        rows_added += 1
 
-    return rows_added
+        existing_urls.add(application_url)
+        new_jobs.append(job)
+
+    return new_jobs
