@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 
 
@@ -14,8 +15,8 @@ def get_jobs():
     response = requests.get(
         API_URL,
         params={
-            "app_id": __import__("os").environ["ADZUNA_APP_ID"],
-            "app_key": __import__("os").environ["ADZUNA_APP_KEY"],
+            "app_id": os.environ["ADZUNA_APP_ID"],
+            "app_key": os.environ["ADZUNA_APP_KEY"],
             "results_per_page": 50,
             "where": "London",
             "what": "internship placement",
@@ -29,21 +30,92 @@ def get_jobs():
 
 
 def is_relevant(job, criteria):
-    text = (
-        str(job.get("title", "")) + " " +
-        str(job.get("description", ""))
-    ).lower()
+    title = str(job.get("title", "")).lower()
+    description = str(job.get("description", "")).lower()
 
-    fields = criteria["target_fields"]
+    text = f"{title} {description}"
 
-    include_terms = criteria["role_type"]["include"]
-    exclude_terms = criteria["role_type"]["exclude"]
+    target_fields = [
+        "journalism",
+        "journalist",
+        "publishing",
+        "editorial",
+        "editor",
+        "film",
+        "cinema",
+        "television",
+        "tv",
+        "media",
+        "communications",
+        "public relations",
+        "pr ",
+        "publicity",
+        "marketing",
+        "content",
+        "magazine",
+        "broadcasting",
+        "entertainment",
+        "arts",
+        "culture",
+    ]
 
-    has_field = any(term.lower() in text for term in fields)
-    has_internship = any(term.lower() in text for term in include_terms)
-    has_exclusion = any(term.lower() in text for term in exclude_terms)
+    unwanted_fields = [
+        "software",
+        "developer",
+        "engineering",
+        "engineer",
+        "actuarial",
+        "accounting",
+        "accountant",
+        "finance",
+        "financial analyst",
+        "human resources",
+        " hr ",
+        "logistics",
+        "warehouse",
+        "supply chain",
+        "procurement",
+        "hospitality",
+        "property management",
+        "construction",
+        "mechanical",
+        "electrical",
+        "data scientist",
+        "data science",
+        "cyber security",
+        "cybersecurity",
+    ]
 
-    return has_field and has_internship and not has_exclusion
+    internship_terms = [
+        "intern",
+        "internship",
+        "placement",
+        "student placement",
+        "summer placement",
+        "summer internship",
+    ]
+
+    excluded_roles = [
+        "runner",
+        "production runner",
+        "camera runner",
+        "floor runner",
+        "graduate scheme",
+        "graduate programme",
+        "graduate program",
+    ]
+
+    has_target_field = any(term in text for term in target_fields)
+    has_unwanted_field = any(term in text for term in unwanted_fields)
+    has_internship = any(term in text for term in internship_terms)
+    has_excluded_role = any(term in text for term in excluded_roles)
+
+    return (
+        has_target_field
+        and has_internship
+        and not has_unwanted_field
+        and not has_excluded_role
+    )
 
 
 def process_jobs():
@@ -68,7 +140,7 @@ def process_jobs():
             "source": "Adzuna",
             "status": "🆕 New",
             "date_added": "",
-            "notes": ""
+            "notes": "",
         })
 
     return results
@@ -79,7 +151,7 @@ if __name__ == "__main__":
 
     print(f"Found {len(jobs)} potential matches.")
 
-    for job in jobs[:20]:
+    for job in jobs:
         print(
             f"{job['company']} | "
             f"{job['role']} | "
