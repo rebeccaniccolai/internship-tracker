@@ -1,7 +1,8 @@
 import os
+from datetime import datetime, timedelta, timezone
+
 import requests
 
-from datetime import datetime, timedelta, timezone
 
 API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
@@ -57,66 +58,133 @@ def is_relevant(job):
     description = str(job.get("description", "")).lower()
     text = f"{title} {description}"
 
+    # Ignore old listings.
     created = job.get("created", "")
 
     try:
         posted_date = datetime.fromisoformat(
             created.replace("Z", "+00:00")
-    )
+        )
 
-    if posted_date < datetime.now(timezone.utc) - timedelta(days=180):
-        return False
-except Exception:
-    pass
+        cutoff = datetime.now(timezone.utc) - timedelta(days=180)
+
+        if posted_date < cutoff:
+            return False
+
+    except Exception:
+        pass
 
     target_fields = [
-        "journalism", "journalist", "publishing", "editorial",
-        "editor", "film", "cinema", "television", "tv", "media",
-        "communications", "public relations", "pr ", "publicity",
-        "marketing", "content", "magazine", "broadcasting",
-        "entertainment", "arts", "culture",
+        "journalism",
+        "journalist",
+        "publishing",
+        "editorial",
+        "editor",
+        "film",
+        "cinema",
+        "television",
+        "tv",
+        "media",
+        "communications",
+        "public relations",
+        "pr ",
+        "publicity",
+        "marketing",
+        "content",
+        "magazine",
+        "broadcasting",
+        "entertainment",
+        "arts",
+        "culture",
     ]
 
     unwanted_fields = [
-        "software", "developer", "engineering", "engineer",
-        "actuarial", "accounting", "accountant", "finance",
-        "financial analyst", "human resources", " hr ",
-        "logistics", "warehouse", "supply chain", "procurement",
-        "hospitality", "property management", "construction",
-        "mechanical", "electrical", "data scientist", "data science",
-        "cyber security", "cybersecurity", "investment",
-        "investment management", "financial resources",
-        "wealth management", "asset management", "banking",
-        "trading", "private equity", "venture capital", "insurance",
+        "software",
+        "developer",
+        "engineering",
+        "engineer",
+        "actuarial",
+        "accounting",
+        "accountant",
+        "finance",
+        "financial analyst",
+        "human resources",
+        " hr ",
+        "logistics",
+        "warehouse",
+        "supply chain",
+        "procurement",
+        "hospitality",
+        "property management",
+        "construction",
+        "mechanical",
+        "electrical",
+        "data scientist",
+        "data science",
+        "cyber security",
+        "cybersecurity",
+        "investment",
+        "investment management",
+        "financial resources",
+        "wealth management",
+        "asset management",
+        "banking",
+        "trading",
+        "private equity",
+        "venture capital",
+        "insurance",
         "12 month",
-"12-month",
-"one year",
-"1 year",
-"18 month",
-"18-month",
-"two year",
-"2 year",
-"bali based",
-"bali-based",
+        "12-month",
+        "one year",
+        "1 year",
+        "18 month",
+        "18-month",
+        "two year",
+        "2 year",
+        "bali based",
+        "bali-based",
     ]
 
     internship_terms = [
-        "intern", "internship", "placement",
-        "student placement", "summer placement",
+        "intern",
+        "internship",
+        "placement",
+        "student placement",
+        "summer placement",
         "summer internship",
     ]
 
     excluded_roles = [
-        "runner", "production runner", "camera runner",
-        "floor runner", "graduate scheme",
-        "graduate programme", "graduate program",
+        "runner",
+        "production runner",
+        "camera runner",
+        "floor runner",
+        "graduate scheme",
+        "graduate programme",
+        "graduate program",
     ]
 
+    has_target_field = any(
+        term in text for term in target_fields
+    )
+
+    has_unwanted_field = any(
+        term in text for term in unwanted_fields
+    )
+
+    has_internship = any(
+        term in text for term in internship_terms
+    )
+
+    has_excluded_role = any(
+        term in title for term in excluded_roles
+    )
+
     return (
-        any(term in text for term in target_fields)
-        and any(term in text for term in internship_terms)
-        and not any(term in text for term in unwanted_fields)
-        and not any(term in title for term in excluded_roles)
+        has_target_field
+        and has_internship
+        and not has_unwanted_field
+        and not has_excluded_role
     )
 
 
