@@ -59,9 +59,9 @@ def is_relevant(job):
 
     created = job.get("created", "")
 
-try:
-    posted_date = datetime.fromisoformat(
-        created.replace("Z", "+00:00")
+    try:
+        posted_date = datetime.fromisoformat(
+            created.replace("Z", "+00:00")
     )
 
     if posted_date < datetime.now(timezone.utc) - timedelta(days=180):
