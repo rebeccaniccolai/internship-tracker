@@ -217,7 +217,6 @@ def process_jobs():
             unique_key = (
                 company.lower(),
                 role.lower(),
-                url.lower(),
             )
 
             if unique_key not in jobs_by_key:
