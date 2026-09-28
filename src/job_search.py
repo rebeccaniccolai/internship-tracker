@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 import requests
 from sheets_writer import add_jobs
+from telegram_notifier import send_new_jobs
 
 
 API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
@@ -258,3 +259,7 @@ if __name__ == "__main__":
     rows_added = add_jobs(jobs)
 
     print(f"Added {rows_added} new jobs to Google Sheets.")
+
+    send_new_jobs(new_jobs)
+
+    print(f"Sent {len(new_jobs)} Telegram notifications.")
