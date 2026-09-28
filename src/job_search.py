@@ -84,6 +84,16 @@ def is_relevant(job, criteria):
         "data science",
         "cyber security",
         "cybersecurity",
+        "investment",
+"investment management",
+"financial resources",
+"wealth management",
+"asset management",
+"banking",
+"trading",
+"private equity",
+"venture capital",
+"insurance",
     ]
 
     internship_terms = [
