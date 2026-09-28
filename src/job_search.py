@@ -55,8 +55,8 @@ def search_jobs(query):
         print(f"Adzuna temporarily unavailable for: {query}")
         return []
 
-response.raise_for_status()
-return response.json().get("results", [])
+    response.raise_for_status()
+    return response.json().get("results", [])
 
 
 def normalise_text(text):
