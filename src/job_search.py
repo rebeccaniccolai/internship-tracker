@@ -1,6 +1,7 @@
 import os
 import requests
 
+from datetime import datetime, timedelta, timezone
 
 API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
@@ -56,6 +57,18 @@ def is_relevant(job):
     description = str(job.get("description", "")).lower()
     text = f"{title} {description}"
 
+    created = job.get("created", "")
+
+try:
+    posted_date = datetime.fromisoformat(
+        created.replace("Z", "+00:00")
+    )
+
+    if posted_date < datetime.now(timezone.utc) - timedelta(days=180):
+        return False
+except Exception:
+    pass
+
     target_fields = [
         "journalism", "journalist", "publishing", "editorial",
         "editor", "film", "cinema", "television", "tv", "media",
@@ -75,6 +88,16 @@ def is_relevant(job):
         "investment management", "financial resources",
         "wealth management", "asset management", "banking",
         "trading", "private equity", "venture capital", "insurance",
+        "12 month",
+"12-month",
+"one year",
+"1 year",
+"18 month",
+"18-month",
+"two year",
+"2 year",
+"bali based",
+"bali-based",
     ]
 
     internship_terms = [
