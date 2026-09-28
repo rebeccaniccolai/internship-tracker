@@ -256,9 +256,9 @@ if __name__ == "__main__":
 
     print(f"Found {len(jobs)} potential matches.")
 
-    rows_added = add_jobs(jobs)
+    new_jobs = add_jobs(jobs)
 
-    print(f"Added {rows_added} new jobs to Google Sheets.")
+    print(f"Added {len(new_jobs)} new jobs to Google Sheets.")
 
     send_new_jobs(new_jobs)
 
