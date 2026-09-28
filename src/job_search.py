@@ -1,7 +1,9 @@
 import os
+import time
 from datetime import datetime, timedelta, timezone
 
 import requests
+
 from sheets_writer import add_jobs
 from telegram_notifier import send_new_jobs
 
@@ -38,25 +40,54 @@ SEARCHES = [
 
 
 def search_jobs(query):
-    response = requests.get(
-        API_URL,
-        params={
-            "app_id": os.environ["ADZUNA_APP_ID"],
-            "app_key": os.environ["ADZUNA_APP_KEY"],
-            "results_per_page": 50,
-            "where": "London",
-            "what": query,
-            "content-type": "application/json",
-        },
-        timeout=30,
-    )
+    params = {
+        "app_id": os.environ["ADZUNA_APP_ID"],
+        "app_key": os.environ["ADZUNA_APP_KEY"],
+        "results_per_page": 50,
+        "where": "London",
+        "what": query,
+        "content-type": "application/json",
+    }
 
-    if response.status_code == 503:
-        print(f"Adzuna temporarily unavailable for: {query}")
-        return []
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                API_URL,
+                params=params,
+                timeout=30,
+            )
 
-    response.raise_for_status()
-    return response.json().get("results", [])
+            if response.status_code in [429, 500, 502, 503, 504]:
+                print(
+                    f"Adzuna returned {response.status_code} "
+                    f"for '{query}'. Attempt {attempt + 1}/3."
+                )
+
+                if attempt < 2:
+                    time.sleep(5 * (attempt + 1))
+                    continue
+
+                print(f"Skipping '{query}' after 3 failed attempts.")
+                return []
+
+            response.raise_for_status()
+
+            return response.json().get("results", [])
+
+        except requests.RequestException as error:
+            print(
+                f"Request failed for '{query}': "
+                f"{error}. Attempt {attempt + 1}/3."
+            )
+
+            if attempt < 2:
+                time.sleep(5 * (attempt + 1))
+                continue
+
+            print(f"Skipping '{query}' after 3 failed attempts.")
+            return []
+
+    return []
 
 
 def normalise_text(text):
@@ -216,7 +247,6 @@ def process_jobs():
             )
 
             role = job.get("title", "").strip()
-            url = job.get("redirect_url", "").strip()
 
             unique_key = (
                 company.lower(),
