@@ -1,10 +1,8 @@
 import json
-import re
 import requests
-from datetime import datetime, timezone
 
 
-API_URL = "https://www.arbeitnow.co.uk/api/job-board-api"
+API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
 
 def load_criteria():
@@ -13,70 +11,39 @@ def load_criteria():
 
 
 def get_jobs():
-    response = requests.get(API_URL, timeout=30)
+    response = requests.get(
+        API_URL,
+        params={
+            "app_id": __import__("os").environ["ADZUNA_APP_ID"],
+            "app_key": __import__("os").environ["ADZUNA_APP_KEY"],
+            "results_per_page": 50,
+            "where": "London",
+            "what": "internship placement",
+            "content-type": "application/json",
+        },
+        timeout=30,
+    )
+
     response.raise_for_status()
-
-    data = response.json()
-
-    if isinstance(data, dict):
-        return data.get("data", [])
-
-    return data
+    return response.json().get("results", [])
 
 
-def text_matches(text, keywords):
-    text = text.lower()
+def is_relevant(job, criteria):
+    text = (
+        str(job.get("title", "")) + " " +
+        str(job.get("description", ""))
+    ).lower()
 
-    return [
-        keyword
-        for keyword in keywords
-        if keyword.lower() in text
-    ]
+    fields = criteria["target_fields"]
 
+    include_terms = criteria["role_type"]["include"]
+    exclude_terms = criteria["role_type"]["exclude"]
 
-def is_london(job):
-    location = str(job.get("location", "")).lower()
+    has_field = any(term.lower() in text for term in fields)
+    has_internship = any(term.lower() in text for term in include_terms)
+    has_exclusion = any(term.lower() in text for term in exclude_terms)
 
-    return (
-        "london" in location
-        or "greater london" in location
-    )
-
-
-def is_internship_or_placement(job, criteria):
-    title = str(job.get("title", "")).lower()
-    description = str(job.get("description", "")).lower()
-
-    combined = f"{title} {description}"
-
-    include = criteria["role_type"]["include"]
-    exclude = criteria["role_type"]["exclude"]
-
-    has_internship_term = any(
-        term.lower() in combined
-        for term in include
-    )
-
-    has_excluded_term = any(
-        term.lower() in combined
-        for term in exclude
-    )
-
-    return has_internship_term and not has_excluded_term
-
-
-def is_relevant_field(job, criteria):
-    title = str(job.get("title", "")).lower()
-    description = str(job.get("description", "")).lower()
-
-    combined = f"{title} {description}"
-
-    matched_fields = text_matches(
-        combined,
-        criteria["target_fields"]
-    )
-
-    return matched_fields
+    return has_field and has_internship and not has_exclusion
 
 
 def process_jobs():
@@ -86,29 +53,21 @@ def process_jobs():
     results = []
 
     for job in jobs:
-
-        if not is_london(job):
-            continue
-
-        if not is_internship_or_placement(job, criteria):
-            continue
-
-        matched_fields = is_relevant_field(job, criteria)
-
-        if not matched_fields:
+        if not is_relevant(job, criteria):
             continue
 
         results.append({
-            "company": job.get("company_name", ""),
+            "company": job.get("company", {}).get("display_name", ""),
             "role": job.get("title", ""),
-            "location": job.get("location", ""),
-            "posted_date": job.get("created_at", ""),
+            "location": job.get("location", {}).get("display_name", ""),
+            "posted_date": job.get("created", ""),
             "deadline": "",
-            "category": ", ".join(matched_fields),
+            "category": "Potential match",
             "match": "Potential match",
-            "application_url": job.get("url", ""),
-            "source": "Arbeitnow",
+            "application_url": job.get("redirect_url", ""),
+            "source": "Adzuna",
             "status": "🆕 New",
+            "date_added": "",
             "notes": ""
         })
 
