@@ -8,6 +8,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test Arbeitnow API
-        run: |
-          python -c "import requests; r=requests.get('https://www.arbeitnow.co.uk/api/job-board-api', headers={'User-Agent':'Mozilla/5.0'}, timeout=30); print('STATUS:', r.status_code); print(r.text[:1000])"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run job search
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: python src/job_search.py
