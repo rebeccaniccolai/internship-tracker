@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import requests
-
+from sheets_writer import add_jobs
 
 API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
@@ -386,9 +386,7 @@ if __name__ == "__main__":
 
     print(f"Found {len(jobs)} potential matches.")
 
-    for job in jobs:
-        print(
-            f"{job['company']} | "
-            f"{job['role']} | "
-            f"{job['location']}"
+    rows_added = add_jobs(jobs)
+
+    print(f"Added {rows_added} new jobs to Google Sheets.")
         )
