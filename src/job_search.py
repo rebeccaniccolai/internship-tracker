@@ -51,8 +51,12 @@ def search_jobs(query):
         timeout=30,
     )
 
-    response.raise_for_status()
-    return response.json().get("results", [])
+    if response.status_code == 503:
+        print(f"Adzuna temporarily unavailable for: {query}")
+        return []
+
+response.raise_for_status()
+return response.json().get("results", [])
 
 
 def normalise_text(text):
