@@ -1,17 +1,39 @@
-import json
 import os
 import requests
 
 
 API_URL = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
+SEARCHES = [
+    "journalism intern",
+    "publishing intern",
+    "editorial intern",
+    "film intern",
+    "television intern",
+    "media intern",
+    "communications intern",
+    "PR intern",
+    "publicity intern",
+    "marketing intern",
+    "content intern",
+    "magazine intern",
+    "broadcasting intern",
+    "entertainment intern",
+    "arts intern",
+    "culture intern",
+    "journalism placement",
+    "publishing placement",
+    "editorial placement",
+    "film placement",
+    "media placement",
+    "communications placement",
+    "PR placement",
+    "marketing placement",
+    "content placement",
+]
 
-def load_criteria():
-    with open("config/criteria.json", "r", encoding="utf-8") as f:
-        return json.load(f)
 
-
-def get_jobs():
+def search_jobs(query):
     response = requests.get(
         API_URL,
         params={
@@ -19,7 +41,7 @@ def get_jobs():
             "app_key": os.environ["ADZUNA_APP_KEY"],
             "results_per_page": 50,
             "where": "London",
-            "what": "internship placement",
+            "what": query,
             "content-type": "application/json",
         },
         timeout=30,
@@ -29,115 +51,66 @@ def get_jobs():
     return response.json().get("results", [])
 
 
-def is_relevant(job, criteria):
+def is_relevant(job):
     title = str(job.get("title", "")).lower()
     description = str(job.get("description", "")).lower()
-
     text = f"{title} {description}"
 
     target_fields = [
-        "journalism",
-        "journalist",
-        "publishing",
-        "editorial",
-        "editor",
-        "film",
-        "cinema",
-        "television",
-        "tv",
-        "media",
-        "communications",
-        "public relations",
-        "pr ",
-        "publicity",
-        "marketing",
-        "content",
-        "magazine",
-        "broadcasting",
-        "entertainment",
-        "arts",
-        "culture",
+        "journalism", "journalist", "publishing", "editorial",
+        "editor", "film", "cinema", "television", "tv", "media",
+        "communications", "public relations", "pr ", "publicity",
+        "marketing", "content", "magazine", "broadcasting",
+        "entertainment", "arts", "culture",
     ]
 
     unwanted_fields = [
-        "software",
-        "developer",
-        "engineering",
-        "engineer",
-        "actuarial",
-        "accounting",
-        "accountant",
-        "finance",
-        "financial analyst",
-        "human resources",
-        " hr ",
-        "logistics",
-        "warehouse",
-        "supply chain",
-        "procurement",
-        "hospitality",
-        "property management",
-        "construction",
-        "mechanical",
-        "electrical",
-        "data scientist",
-        "data science",
-        "cyber security",
-        "cybersecurity",
-        "investment",
-"investment management",
-"financial resources",
-"wealth management",
-"asset management",
-"banking",
-"trading",
-"private equity",
-"venture capital",
-"insurance",
+        "software", "developer", "engineering", "engineer",
+        "actuarial", "accounting", "accountant", "finance",
+        "financial analyst", "human resources", " hr ",
+        "logistics", "warehouse", "supply chain", "procurement",
+        "hospitality", "property management", "construction",
+        "mechanical", "electrical", "data scientist", "data science",
+        "cyber security", "cybersecurity", "investment",
+        "investment management", "financial resources",
+        "wealth management", "asset management", "banking",
+        "trading", "private equity", "venture capital", "insurance",
     ]
 
     internship_terms = [
-        "intern",
-        "internship",
-        "placement",
-        "student placement",
-        "summer placement",
+        "intern", "internship", "placement",
+        "student placement", "summer placement",
         "summer internship",
     ]
 
     excluded_roles = [
-        "runner",
-        "production runner",
-        "camera runner",
-        "floor runner",
-        "graduate scheme",
-        "graduate programme",
-        "graduate program",
+        "runner", "production runner", "camera runner",
+        "floor runner", "graduate scheme",
+        "graduate programme", "graduate program",
     ]
 
-    has_target_field = any(term in text for term in target_fields)
-    has_unwanted_field = any(term in text for term in unwanted_fields)
-    has_internship = any(term in text for term in internship_terms)
-    has_excluded_role = any(term in text for term in excluded_roles)
-
     return (
-        has_target_field
-        and has_internship
-        and not has_unwanted_field
-        and not has_excluded_role
+        any(term in text for term in target_fields)
+        and any(term in text for term in internship_terms)
+        and not any(term in text for term in unwanted_fields)
+        and not any(term in title for term in excluded_roles)
     )
 
 
 def process_jobs():
-    criteria = load_criteria()
-    jobs = get_jobs()
+    jobs_by_id = {}
+
+    for query in SEARCHES:
+        for job in search_jobs(query):
+            job_id = job.get("id")
+
+            if job_id and job_id not in jobs_by_id:
+                if is_relevant(job):
+                    jobs_by_id[job_id] = job
 
     results = []
 
-    for job in jobs:
-        if not is_relevant(job, criteria):
-            continue
-
+    for job in jobs_by_id.values():
         results.append({
             "company": job.get("company", {}).get("display_name", ""),
             "role": job.get("title", ""),
